@@ -1,0 +1,100 @@
+.gaugeCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.gaugeHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.help {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.creditCard {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  text-align: left;
+  transition: border-color var(--t-base);
+}
+.creditCard:hover {
+  border-color: var(--border-strong);
+}
+.creditValue {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 2px;
+}
+.creditValue .num {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+.creditUnit {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.plus {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--surface-teal);
+  color: var(--teal-700);
+  display: grid;
+  place-items: center;
+}
+
+.aiCard {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: linear-gradient(120deg, var(--teal-50), var(--bg-base) 70%);
+  border: 1px solid var(--teal-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  text-align: left;
+  transition: transform var(--t-base);
+}
+.aiCard:active {
+  transform: scale(0.99);
+}
+.aiText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aiCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--action-primary);
+}
+.robot {
+  flex: 0 0 auto;
+}

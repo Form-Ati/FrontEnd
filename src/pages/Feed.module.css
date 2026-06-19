@@ -1,0 +1,58 @@
+.bell {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--text-default);
+  border-radius: var(--radius-md);
+}
+.bell:hover {
+  background: var(--bg-sunken);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--border-default);
+  background: var(--bg-base);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 7px var(--space-4);
+  border-radius: var(--radius-full);
+  transition: all var(--t-base);
+}
+.tabOn {
+  background: var(--action-primary);
+  color: var(--action-primary-text);
+  border-color: var(--action-primary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.skeleton {
+  height: 150px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, var(--bg-sunken), var(--bg-subtle), var(--bg-sunken));
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

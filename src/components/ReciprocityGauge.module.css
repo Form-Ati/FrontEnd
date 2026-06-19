@@ -1,0 +1,111 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+.gaugeBox {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  border-radius: var(--radius-lg);
+}
+.svg {
+  width: 100%;
+  display: block;
+}
+.track {
+  stroke: var(--bg-sunken);
+  stroke-width: 14;
+}
+.progress {
+  stroke: var(--action-primary);
+  stroke-width: 14;
+  transition: stroke-dasharray 600ms ease-out; /* 채움 트랜지션 (§4.2) */
+}
+.wrap[data-state='owing'] .progress {
+  stroke: var(--status-owing);
+}
+.face {
+  fill: var(--green-mint);
+}
+.wrap[data-state='owing'] .face {
+  fill: var(--surface-amber);
+}
+.eye {
+  fill: var(--teal-700);
+}
+.wrap[data-state='owing'] .eye {
+  fill: var(--amber-700);
+}
+.mouth {
+  stroke: var(--teal-700);
+  stroke-width: 3.4;
+}
+.wrap[data-state='owing'] .mouth {
+  stroke: var(--amber-700);
+}
+
+.stateLabel {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.label_balanced,
+.label_ahead {
+  color: var(--teal-600);
+}
+.label_owing {
+  color: var(--amber-700);
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-5);
+}
+.legItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.legItem b {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+.dotReceived,
+.dotGiven {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dotReceived {
+  background: var(--status-owing);
+}
+.dotGiven {
+  background: var(--action-primary);
+}
+.wrap[data-state='balanced'] .dotReceived,
+.wrap[data-state='ahead'] .dotReceived {
+  background: var(--green-soft);
+}
+
+.pulse {
+  animation: gauge-pulse 0.85s ease-out 1;
+}
+@keyframes gauge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 168, 102, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(52, 168, 102, 0);
+  }
+}
