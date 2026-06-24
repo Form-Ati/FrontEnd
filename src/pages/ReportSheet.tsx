@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/Button';
 import { TextArea } from '@/components/Field';
 import { Sheet } from '@/components/Sheet';
-import { api } from '@/api/mockApi';
+import { api } from '@/api/api';
 import { useToast } from '@/store/ui';
 import type { ReportReason } from '@/types/domain';
 import styles from './ReportSheet.module.css';

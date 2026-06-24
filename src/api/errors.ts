@@ -1,5 +1,5 @@
-// 공통 응답/예외 — develop_system.md §5 공통 응답 포맷
-// { success:false, error:{ code, message(사람이 읽는 메시지) } }
+// 공통 예외 — 백엔드 ApiResponse 의 { success:false, error:{ code, message } } 매핑.
+// http 계층이 엔벨로프를 풀어 이 에러를 throw 하고, UI 는 code/message 로 분기·표출한다.
 export class ApiError extends Error {
   code: string;
   constructor(code: string, message: string) {
@@ -8,10 +8,3 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
-
-export const fail = (code: string, message: string): never => {
-  throw new ApiError(code, message);
-};
-
-// 목 네트워크 지연 (UX/로딩 상태 확인용)
-export const delay = (ms = 380) => new Promise((r) => setTimeout(r, ms));

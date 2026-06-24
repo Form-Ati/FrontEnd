@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from './AuthLayout';
 import { TextField } from '@/components/Field';
 import { Button } from '@/components/Button';
-import { api } from '@/api/mockApi';
 import { ApiError } from '@/api/errors';
 import { useAuth } from '@/store/auth';
 import { useToast } from '@/store/ui';
@@ -18,7 +17,7 @@ type Form = z.infer<typeof schema>;
 
 export function Login() {
   const navigate = useNavigate();
-  const setAuthed = useAuth((s) => s.setAuthed);
+  const login = useAuth((s) => s.login);
   const push = useToast((s) => s.push);
   const {
     register,
@@ -27,13 +26,12 @@ export function Login() {
     formState: { errors, isSubmitting },
   } = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { email: 'survey.kim@univ.ac.kr', password: 'demo' },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = handleSubmit(async (v) => {
     try {
-      await api.login(v);
-      setAuthed(true);
+      await login(v);
       push('다시 오셨네요. 환영해요.', 'positive');
       navigate('/home');
     } catch (e) {

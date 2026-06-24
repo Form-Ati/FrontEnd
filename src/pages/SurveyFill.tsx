@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/Button';
 import { QuestionView, type AnswerValue } from '@/components/QuestionView';
 import { useCompleteResponse, useSurvey, useSurveyQuestions } from '@/api/queries';
-import { api } from '@/api/mockApi';
+import { api } from '@/api/api';
 import { ApiError } from '@/api/errors';
-import { useDb } from '@/store/db';
 import { useToast } from '@/store/ui';
 import styles from './SurveyFill.module.css';
 
@@ -23,19 +22,18 @@ export function SurveyFill() {
   const complete = useCompleteResponse();
   const push = useToast((s) => s.push);
 
-  const pending = useDb((s) =>
-    s.responses.find(
-      (r) => r.surveyId === surveyId && r.responderId === s.currentUserId && r.status === 'PENDING',
-    ),
-  );
-
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
   const [errorIdx, setErrorIdx] = useState<Set<number>>(new Set());
 
-  // 직접 진입한 경우에도 응답 시작(체류시간 기록)
+  // 직접 진입한 경우에도 응답 시작(체류시간 기록). 서버 start 는 멱등 —
+  // 이미 PENDING 이면 기존 응답을 돌려준다. ref 로 중복 호출만 막는다.
+  const started = useRef(false);
   useEffect(() => {
-    if (survey && !pending) api.startResponse(surveyId).catch(() => {});
-  }, [survey, pending, surveyId]);
+    if (surveyId && !started.current) {
+      started.current = true;
+      api.startResponse(surveyId).catch(() => {});
+    }
+  }, [surveyId]);
 
   if (!survey || !questions) {
     return (

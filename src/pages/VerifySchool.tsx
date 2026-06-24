@@ -3,31 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import { IconBack } from '@/components/icons';
 import { IllustShield, IconLock } from '@/components/Illust';
 import { Button } from '@/components/Button';
+import { ApiError } from '@/api/errors';
 import { useAuth } from '@/store/auth';
 import { useToast } from '@/store/ui';
 import styles from './Onboard.module.css';
 
-// 학교 인증 (mockup 2). service.md §6 대학 이메일 인증.
+// 가입 + 학교 인증 (mockup 2). service.md §6 대학 이메일 인증.
+// 실 백엔드 흐름: signup(email,nickname,password) → verify(email,code) → login.
+const EMAIL_SUFFIX = '@univ.ac.kr';
+
 export function VerifySchool() {
   const navigate = useNavigate();
-  const setAuthed = useAuth((s) => s.setAuthed);
+  const signup = useAuth((s) => s.signup);
+  const verifyEmail = useAuth((s) => s.verify);
+  const login = useAuth((s) => s.login);
   const push = useToast((s) => s.push);
+
+  const [phase, setPhase] = useState<'form' | 'code'>('form');
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const send = () => {
-    if (email.trim().length < 2) return;
-    setSent(true);
-    push('인증 메일을 보냈어요.', 'default');
+  const fullEmail = `${email.trim()}${EMAIL_SUFFIX}`;
+  const formValid = email.trim().length >= 2 && nickname.trim().length >= 2 && password.length >= 8;
+
+  const sendCode = async () => {
+    if (!formValid) return;
+    setBusy(true);
+    try {
+      await signup({ email: fullEmail, nickname: nickname.trim(), password });
+      setPhase('code');
+      push('인증 메일을 보냈어요. (데모 코드: 000000)', 'default');
+    } catch (e) {
+      if (e instanceof ApiError) push(e.message, 'warning');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const verify = async () => {
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setAuthed(true); // 데모: 시드 사용자로 입장
-    navigate('/welcome');
+    try {
+      await verifyEmail({ email: fullEmail, code });
+      await login({ email: fullEmail, password });
+      navigate('/welcome');
+    } catch (e) {
+      if (e instanceof ApiError) push(e.message, 'warning');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -52,13 +78,35 @@ export function VerifySchool() {
             placeholder="이메일을 입력하세요"
             inputMode="email"
             value={email}
+            disabled={phase === 'code'}
             onChange={(e) => setEmail(e.target.value)}
             aria-label="학교 이메일"
           />
-          <span className={styles.suffix}>@univ.ac.kr</span>
+          <span className={styles.suffix}>{EMAIL_SUFFIX}</span>
         </div>
 
-        {sent && (
+        {phase === 'form' && (
+          <>
+            <input
+              className={styles.codeInput}
+              placeholder="닉네임 (2자 이상)"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              aria-label="닉네임"
+            />
+            <input
+              className={styles.codeInput}
+              type="password"
+              placeholder="비밀번호 (8자 이상)"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-label="비밀번호"
+            />
+          </>
+        )}
+
+        {phase === 'code' && (
           <input
             className={styles.codeInput}
             placeholder="인증 코드 6자리"
@@ -72,8 +120,8 @@ export function VerifySchool() {
       </div>
 
       <div className={styles.actions}>
-        {!sent ? (
-          <Button size="lg" full disabled={email.trim().length < 2} onClick={send}>
+        {phase === 'form' ? (
+          <Button size="lg" full loading={busy} disabled={!formValid} onClick={sendCode}>
             인증 메일 보내기
           </Button>
         ) : (

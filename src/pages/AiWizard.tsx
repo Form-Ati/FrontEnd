@@ -4,7 +4,7 @@ import { IconClose, IconCheck } from '@/components/icons';
 import { Stepper } from '@/components/Stepper';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Bits';
-import { api } from '@/api/mockApi';
+import { api } from '@/api/api';
 import { ApiError } from '@/api/errors';
 import { useInvalidateAll } from '@/api/queries';
 import { useToast } from '@/store/ui';

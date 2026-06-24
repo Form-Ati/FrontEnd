@@ -1,24 +1,6 @@
 // TanStack Query 훅 — develop_system.md §2.2 서버상태=TanStack Query.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { api } from './mockApi';
-import { useDb } from '@/store/db';
-
-// 상호성: 갚은 응답(=기여도) vs 받은 응답(내 설문이 받은 VERIFIED 응답 수)
-export function useReciprocity() {
-  const currentUserId = useDb((s) => s.currentUserId);
-  const users = useDb((s) => s.users);
-  const surveys = useDb((s) => s.surveys);
-  const responses = useDb((s) => s.responses);
-  return useMemo(() => {
-    const meUser = users.find((u) => u.id === currentUserId);
-    const mineIds = new Set(surveys.filter((s) => s.ownerId === currentUserId).map((s) => s.id));
-    const received = responses.filter(
-      (r) => mineIds.has(r.surveyId) && r.status === 'VERIFIED',
-    ).length;
-    return { given: meUser?.contribution ?? 0, received };
-  }, [currentUserId, users, surveys, responses]);
-}
+import { api } from './api';
 
 export const qk = {
   me: ['me'] as const,
@@ -52,6 +34,16 @@ export const useResponseCredit = () =>
 
 export const useAiCredit = () =>
   useQuery({ queryKey: qk.aiCredit, queryFn: () => api.aiCredit() });
+
+// 상호성: 갚은 응답(=기여도) vs 받은 응답(내 설문이 모은 응답 수 합).
+// 인메모리 db 대신 서버 데이터(useMe + useMySurveys)로 산출한다.
+export function useReciprocity() {
+  const { data: me } = useMe();
+  const { data: mySurveys } = useMySurveys();
+  const given = me?.contribution ?? 0;
+  const received = (mySurveys ?? []).reduce((sum, s) => sum + s.collectedCount, 0);
+  return { given, received };
+}
 
 // 정산 후 광범위 무효화 (잔액/피드/설문/원장 동시 변동)
 export function useInvalidateAll() {

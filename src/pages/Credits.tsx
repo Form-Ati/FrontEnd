@@ -4,7 +4,7 @@ import { Card, CreditAmount, EmptyState } from '@/components/Bits';
 import { Skeleton } from '@/components/Skeleton';
 import { Button } from '@/components/Button';
 import { useAiCredit, useResponseCredit } from '@/api/queries';
-import { api } from '@/api/mockApi';
+import { api } from '@/api/api';
 import { useInvalidateAll } from '@/api/queries';
 import { useToast } from '@/store/ui';
 import { dateLabel } from '@/lib/format';

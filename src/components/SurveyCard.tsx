@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import type { Survey, User } from '@/types/domain';
+import type { Survey } from '@/types/domain';
 import { estLabel, relativeTime } from '@/lib/format';
 import styles from './SurveyCard.module.css';
 
 // design_system.md §4.3 설문 카드 (피드 핵심) — mockup 레이아웃.
-export function SurveyCard({ survey, owner }: { survey: Survey; owner?: User }) {
+export function SurveyCard({ survey }: { survey: Survey }) {
+  const owner = survey.owner;
   const remain = Math.max(0, survey.targetCount - survey.collectedCount);
   const nearEnd = remain > 0 && remain <= Math.ceil(survey.targetCount * 0.2);
 

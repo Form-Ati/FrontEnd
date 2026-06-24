@@ -1,18 +1,40 @@
 import { create } from 'zustand';
-import { db } from './db';
+import { api } from '@/api/api';
+import { setUnauthorizedHandler, tokenStore } from '@/api/tokenStore';
+import type { User } from '@/types/domain';
 
-// 더미 인증 게이트. 시드 사용자(김설문)가 기본 로그인 상태라 바로 앱을 둘러볼 수 있다.
+// 인증 스토어 — 토큰은 tokenStore(localStorage)에, 사용자/로그인여부는 여기에.
+// authed 는 새로고침 시 저장된 토큰 유무로 복원된다(라우트 가드 기준).
 interface AuthState {
+  user: User | null;
   authed: boolean;
-  setAuthed: (v: boolean) => void;
+  signup: (input: { email: string; nickname: string; password: string }) => Promise<{ userId: number }>;
+  verify: (input: { email: string; code: string }) => Promise<void>;
+  login: (input: { email: string; password: string }) => Promise<void>;
   logout: () => void;
 }
 
 export const useAuth = create<AuthState>((set) => ({
-  authed: true,
-  setAuthed: (v) => set({ authed: v }),
+  user: null,
+  authed: tokenStore.hasSession(),
+
+  signup: (input) => api.signup(input),
+
+  verify: async (input) => {
+    await api.verify(input);
+  },
+
+  login: async (input) => {
+    const res = await api.login(input);
+    tokenStore.setTokens(res.accessToken, res.refreshToken);
+    set({ user: res.user, authed: true });
+  },
+
   logout: () => {
-    db.set({ currentUserId: 1 });
-    set({ authed: false });
+    tokenStore.clear();
+    set({ user: null, authed: false });
   },
 }));
+
+// http 계층이 리프레시까지 실패해 강제 로그아웃할 때 상태를 정리한다.
+setUnauthorizedHandler(() => useAuth.setState({ user: null, authed: false }));

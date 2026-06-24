@@ -19,7 +19,7 @@ import {
   type DraftQuestion,
 } from '@/lib/questions';
 import { QUESTION_TYPE_LABEL, type QuestionType, CATEGORIES } from '@/types/domain';
-import { api } from '@/api/mockApi';
+import { api } from '@/api/api';
 import { ApiError } from '@/api/errors';
 import { useInvalidateAll } from '@/api/queries';
 import { useToast } from '@/store/ui';

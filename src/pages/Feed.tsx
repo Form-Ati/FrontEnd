@@ -5,7 +5,6 @@ import { EmptyState } from '@/components/Bits';
 import { ErrorState, SkeletonList } from '@/components/Skeleton';
 import { IconBell } from '@/components/icons';
 import { useFeed } from '@/api/queries';
-import { useDb } from '@/store/db';
 import { useToast } from '@/store/ui';
 import type { Survey } from '@/types/domain';
 import styles from './Feed.module.css';
@@ -15,7 +14,6 @@ const SORTS: Sort[] = ['전체', '최신순', '인기순', '짧은순'];
 
 export function Feed() {
   const { data: surveys, isLoading, isError, refetch } = useFeed(0);
-  const users = useDb((s) => s.users);
   const push = useToast((s) => s.push);
   const [sort, setSort] = useState<Sort>('전체');
 
@@ -70,7 +68,7 @@ export function Feed() {
         <ul className={styles.list}>
           {sorted.map((s) => (
             <li key={s.id}>
-              <SurveyCard survey={s} owner={users.find((u) => u.id === s.ownerId)} />
+              <SurveyCard survey={s} />
             </li>
           ))}
         </ul>

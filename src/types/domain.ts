@@ -18,9 +18,17 @@ export interface User {
 
 export type SurveyStatus = 'ACTIVE' | 'PAUSED' | 'COMPLETED';
 
+// 카드/상세에서 쓰는 작성자 요약 (백엔드 SurveyDto.owner 임베드).
+export interface OwnerSummary {
+  id: number;
+  nickname: string;
+  university: string | null;
+}
+
 export interface Survey {
   id: number;
   ownerId: number;
+  owner?: OwnerSummary;
   title: string;
   description: string | null;
   externalUrl: string | null; // 구글폼 등 (자체빌더면 null)
