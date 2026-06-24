@@ -110,8 +110,8 @@
   .device {
     display: block;
     position: relative;
-    width: 400px;
-    height: min(860px, calc(100dvh - 64px));
+    width: 480px;
+    height: min(1000px, calc(100dvh - 48px));
     background: var(--bg-base);
     border: 1px solid var(--border-default);
     border-radius: 36px;
@@ -131,9 +131,9 @@
   }
 }
 
-/* 아주 넓은 화면에서 폰을 약간 키움 */
+/* 아주 넓은 화면에서 폰을 더 키움 */
 @media (min-width: 1440px) {
   .device {
-    width: 420px;
+    width: 540px;
   }
 }
