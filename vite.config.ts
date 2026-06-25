@@ -45,18 +45,16 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // /api/* 는 서비스 워커가 절대 인터셉트하지 않는다.
+        // Authorization 헤더 유실 및 캐시된 4xx 서빙을 방지.
+        // API 응답 캐싱은 React Query가 담당.
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            // 폰트 캐시 (디자인 시스템 폰트)
+            // 폰트 캐시 (CDN 폰트)
             urlPattern: /cdn\.jsdelivr\.net\/.*\.(woff2?|css)/,
             handler: 'CacheFirst',
             options: { cacheName: 'fonts', expiration: { maxEntries: 20 } },
-          },
-          {
-            // API GET 캐시 (피드 등)
-            urlPattern: /\/api\/(feed|surveys)/,
-            handler: 'NetworkFirst',
-            options: { cacheName: 'api', networkTimeoutSeconds: 3 },
           },
         ],
       },

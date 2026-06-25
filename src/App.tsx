@@ -18,7 +18,7 @@ import { Credits } from './pages/Credits';
 
 function Protected({ children }: { children: ReactNode }) {
   const authed = useAuth((s) => s.authed);
-  return authed ? <>{children}</> : <Navigate to="/" replace />;
+  return authed ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 export default function App() {

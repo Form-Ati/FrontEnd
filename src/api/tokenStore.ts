@@ -49,5 +49,10 @@ export function setUnauthorizedHandler(fn: () => void) {
 }
 export function fireUnauthorized() {
   tokenStore.clear();
-  onUnauthorized?.();
+  if (onUnauthorized) {
+    onUnauthorized();
+  } else {
+    // 핸들러 미등록 시 hard redirect (앱 초기화 전 만료 등)
+    window.location.replace('/login');
+  }
 }

@@ -85,8 +85,10 @@ async function send<T>(path: string, options: RequestOptions, retried: boolean):
   }
   clearTimeout(timeout);
 
-  // 401 → refresh 후 1회 재시도. 재시도에서도 401 이면 강제 로그아웃.
-  if (res.status === 401 && auth && !retried) {
+  // 401/403 → refresh 후 1회 재시도.
+  // 403은 SW가 auth 헤더를 유실했을 때도 발생하므로 refresh로 복구 시도.
+  // 재시도에서도 실패하면 강제 로그아웃.
+  if ((res.status === 401 || res.status === 403) && auth && !retried) {
     const ok = await refreshOnce();
     if (ok) return send<T>(path, options, true);
     fireUnauthorized();
