@@ -15,6 +15,7 @@ export interface DraftQuestion {
   description: string | null;
   required: boolean;
   options: string[];
+  branchRules: Record<number, string>;
   scaleMax: number;
   scaleMinLabel: string | null;
   scaleMaxLabel: string | null;
@@ -44,6 +45,7 @@ export function newDraft(type: QuestionType = 'single', sectionUid = ''): DraftQ
     description: null,
     required: false,
     options: needsOptions(type) ? ['옵션 1'] : [],
+    branchRules: {},
     scaleMax: 5,
     scaleMinLabel: null,
     scaleMaxLabel: null,
@@ -55,6 +57,7 @@ export function coerceForType(q: DraftQuestion, type: QuestionType): DraftQuesti
   const next = { ...q, type };
   if (needsOptions(type) && next.options.length === 0) next.options = ['옵션 1'];
   if (!needsOptions(type)) next.options = [];
+  if (type !== 'single' && type !== 'dropdown') next.branchRules = {};
   return next;
 }
 
@@ -80,7 +83,18 @@ export function validateQuestions(qs: DraftQuestion[]): QuestionError[] {
 // 드래프트 → API 입력(문항)
 export function toQuestionInput(
   q: DraftQuestion,
-): Omit<SurveyQuestion, 'id' | 'surveyId' | 'sectionId' | 'position'> & { sectionClientId: string | null } {
+): Omit<SurveyQuestion, 'id' | 'surveyId' | 'sectionId' | 'position' | 'branchRules'> & {
+  sectionClientId: string | null;
+  branchRules: Record<string, string>;
+} {
+  const branchRules =
+    q.type === 'single' || q.type === 'dropdown'
+      ? Object.fromEntries(
+          q.options
+            .map((option, index) => [option.trim(), q.branchRules[index]] as const)
+            .filter(([option, target]) => option && target),
+        )
+      : {};
   return {
     sectionClientId: q.sectionUid || null,
     type: q.type,
@@ -88,6 +102,7 @@ export function toQuestionInput(
     description: q.description?.trim() || null,
     required: q.required,
     options: needsOptions(q.type) ? q.options.map((o) => o.trim()).filter(Boolean) : [],
+    branchRules,
     scaleMax: q.scaleMax,
     scaleMinLabel: q.scaleMinLabel?.trim() || null,
     scaleMaxLabel: q.scaleMaxLabel?.trim() || null,

@@ -118,6 +118,8 @@ export const http = {
     send<T>(path, { ...opts, method: 'GET' }, false),
   post: <T>(path: string, body?: unknown, opts: Omit<RequestOptions, 'method' | 'body'> = {}) =>
     send<T>(path, { ...opts, method: 'POST', body }, false),
+  put: <T>(path: string, body?: unknown, opts: Omit<RequestOptions, 'method' | 'body'> = {}) =>
+    send<T>(path, { ...opts, method: 'PUT', body }, false),
   patch: <T>(path: string, body?: unknown, opts: Omit<RequestOptions, 'method' | 'body'> = {}) =>
     send<T>(path, { ...opts, method: 'PATCH', body }, false),
 };

@@ -116,6 +116,7 @@ export interface SurveyQuestion {
   description: string | null;
   required: boolean;
   options: string[]; // single/multi/dropdown 용
+  branchRules: Record<string, number>; // single/dropdown 옵션값 -> 이동할 섹션 id
   scaleMax: number; // scale 용 (2~10)
   scaleMinLabel: string | null;
   scaleMaxLabel: string | null;

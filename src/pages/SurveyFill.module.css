@@ -6,11 +6,11 @@
 .formHead {
   background: var(--bg-base);
   border: 1px solid var(--border-default);
-  border-top: 6px solid var(--action-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-top: 4px solid var(--action-primary);
+  border-radius: var(--radius-md);
+  box-shadow: none;
   padding: var(--space-5);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 .title {
   font-family: var(--font-display);
@@ -44,15 +44,25 @@
 .sectionHead {
   background: var(--bg-base);
   border: 1px solid var(--border-default);
-  border-top: 6px solid var(--action-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
+  border-left: 4px solid var(--action-primary);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  padding: var(--space-4);
 }
 .sectionTitle {
-  font-size: var(--text-h2);
+  font-size: var(--text-h3);
   font-weight: 700;
   color: var(--text-strong);
+}
+.sectionStep {
+  width: fit-content;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--surface-teal);
+  padding: 3px 9px;
+  color: var(--action-primary);
+  font-size: var(--text-caption);
+  font-weight: 800;
 }
 .sectionDesc {
   margin-top: var(--space-2);
@@ -62,6 +72,13 @@
 }
 .submit {
   margin-top: var(--space-5);
+}
+.navRow {
+  display: grid;
+  grid-template-columns: minmax(88px, auto) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding-top: var(--space-1);
 }
 .hint {
   text-align: center;

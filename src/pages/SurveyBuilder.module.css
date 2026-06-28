@@ -5,7 +5,7 @@
   flex-direction: column;
 }
 .accent {
-  height: 6px;
+  height: 4px;
   background: var(--action-primary);
 }
 .header {
@@ -50,22 +50,44 @@
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--space-4) var(--space-3) var(--space-7);
+  padding: var(--space-4) var(--space-3) var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .cardBase {
   background: var(--bg-base);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.stateCard {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  color: var(--text-default);
+  line-height: 1.5;
+}
+.stateCard strong {
+  color: var(--text-strong);
+  font-size: var(--text-h3);
+}
+.stateCard p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.stateActions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 /* 폼 헤더 카드 */
 .formHead {
-  border-top: 6px solid var(--action-primary);
+  border-top: 4px solid var(--action-primary);
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
@@ -123,7 +145,7 @@
 .previewList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 .sectionBlock {
   gap: var(--space-3);
@@ -131,18 +153,15 @@
 
 .sectionEditor {
   position: relative;
-  border-top: 6px solid var(--action-primary);
-  padding: var(--space-4) var(--space-5);
+  border-left: 4px solid var(--action-primary);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 .sectionBadge {
   width: fit-content;
-  border-radius: var(--radius-full);
-  background: var(--surface-teal);
-  color: var(--teal-700);
-  padding: 4px 10px;
+  color: var(--action-primary);
   font-size: var(--text-caption);
   font-weight: 800;
 }
@@ -152,7 +171,7 @@
   border-bottom: 1px solid var(--border-default);
   background: transparent;
   color: var(--text-strong);
-  font-size: var(--text-h2);
+  font-size: var(--text-h3);
   font-weight: 700;
   outline: none;
   padding: var(--space-2) 0;
@@ -195,7 +214,7 @@
   gap: var(--space-3);
 }
 .previewSectionHead {
-  border-top: 6px solid var(--action-primary);
+  border-left: 4px solid var(--action-primary);
   padding: var(--space-5);
 }
 .previewSectionTitle {
@@ -207,13 +226,12 @@
 /* 문항 에디터 */
 .qCard {
   position: relative;
-  padding: var(--space-5);
-  border-left: 4px solid transparent;
-  transition: border-color var(--t-base), box-shadow var(--t-base);
+  padding: var(--space-4);
+  transition: border-color var(--t-base), box-shadow var(--t-base), background var(--t-base);
 }
 .qActive {
-  border-left-color: var(--action-primary);
-  box-shadow: var(--shadow-md);
+  border-color: var(--teal-300);
+  box-shadow: 0 0 0 3px var(--surface-teal);
 }
 .qInvalid {
   border-color: var(--status-danger);
@@ -236,17 +254,17 @@
 
 .qTop {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-3);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
 }
 .qTitle {
   flex: 1;
   min-width: 0;
   border: none;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid transparent;
   background: var(--bg-subtle);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-radius: var(--radius-sm);
   padding: var(--space-3);
   font-size: var(--text-body);
   font-weight: 500;
@@ -254,15 +272,15 @@
   outline: none;
 }
 .qTitle:focus {
-  border-bottom-color: var(--action-primary);
-  border-bottom-width: 2px;
+  border-color: var(--action-primary);
+  box-shadow: 0 0 0 3px var(--surface-teal);
 }
 .typeSelect {
   flex: 0 0 auto;
   min-height: 44px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
   padding: 0 var(--space-3);
   font-size: var(--text-sm);
   color: var(--text-default);
@@ -273,7 +291,7 @@
   margin-top: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 .ghost {
   color: var(--text-disabled);
@@ -287,6 +305,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+.optGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 .optMark {
   width: 18px;
@@ -331,6 +354,31 @@
 }
 .optRemove:hover {
   color: var(--status-danger);
+}
+.branchRow {
+  margin-left: 30px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: calc(100% - 30px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  padding: 6px var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-caption);
+}
+.branchRow select {
+  min-width: 0;
+  min-height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-default);
+  padding: 0;
+  font-size: var(--text-caption);
+  font-weight: 700;
 }
 .addOpt {
   display: flex;
@@ -387,7 +435,7 @@
   align-items: center;
   justify-content: space-between;
   margin-top: var(--space-4);
-  padding-top: var(--space-3);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--border-default);
 }
 .moveGroup {
@@ -400,8 +448,8 @@
   gap: var(--space-1);
 }
 .footBtn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border: none;
@@ -436,7 +484,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-sm);
-  color: var(--text-default);
+  color: var(--text-muted);
 }
 
 .switch {
@@ -462,9 +510,9 @@
 
 .addBtn {
   width: 100%;
-  min-height: 52px;
+  min-height: 44px;
   border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--bg-base);
   color: var(--action-primary);
   font-weight: 600;
@@ -475,10 +523,10 @@
 }
 .addQuestionBtn {
   width: 100%;
-  min-height: 44px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-base);
+  min-height: 40px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--action-primary);
   font-size: var(--text-sm);
   font-weight: 700;

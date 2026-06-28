@@ -46,7 +46,9 @@ export function SurveyDetail() {
   }
 
   const isTeamMember = !!survey.teamId && !!teams?.some((team) => team.id === survey.teamId);
+  const teamRole = teams?.find((team) => team.id === survey.teamId)?.role;
   const isOwner = me?.id === survey.ownerId || isTeamMember;
+  const canManage = me?.id === survey.ownerId || teamRole === 'OWNER' || teamRole === 'ADMIN';
   const remain = Math.max(0, survey.targetCount - survey.collectedCount);
 
   const start = async () => {
@@ -116,6 +118,11 @@ export function SurveyDetail() {
             <span className="sm muted">잔여 {remain}명</span>
           </div>
           <ProgressBar value={survey.collectedCount} max={survey.targetCount} />
+          {canManage && survey.collectedCount === 0 && (
+            <Button variant="secondary" full onClick={() => navigate(`/surveys/${survey.id}/edit`)}>
+              설문 수정
+            </Button>
+          )}
           <Button full onClick={() => navigate(`/surveys/${survey.id}/results`)}>
             결과 보기
           </Button>

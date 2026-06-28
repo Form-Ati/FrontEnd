@@ -34,6 +34,7 @@ export default function App() {
       <Route path="/home" element={<Protected><Navigate to="/feed" replace /></Protected>} />
       <Route path="/feed" element={<Protected><Feed /></Protected>} />
       <Route path="/surveys/new" element={<Protected><SurveyBuilder /></Protected>} />
+      <Route path="/surveys/:id/edit" element={<Protected><SurveyBuilder /></Protected>} />
       <Route path="/surveys/:id" element={<Protected><SurveyDetail /></Protected>} />
       <Route path="/surveys/:id/fill" element={<Protected><SurveyFill /></Protected>} />
       <Route path="/surveys/:id/done" element={<Protected><ResponseDone /></Protected>} />

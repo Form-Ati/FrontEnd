@@ -28,8 +28,9 @@ export interface TokenResponse {
   refreshToken: string;
 }
 
-type QuestionInput = Omit<SurveyQuestion, 'id' | 'surveyId' | 'sectionId' | 'position'> & {
+type QuestionInput = Omit<SurveyQuestion, 'id' | 'surveyId' | 'sectionId' | 'position' | 'branchRules'> & {
   sectionClientId?: string | null;
+  branchRules?: Record<string, string>;
 };
 
 export interface ResponseAnswerInput {
@@ -53,6 +54,16 @@ export interface CreateSurveyInput {
   teamId?: number | null;
   proofRequired: boolean;
   selfBuilt?: boolean;
+  sections?: CreateSurveySectionInput[];
+  questions?: QuestionInput[];
+}
+
+export interface UpdateSurveyInput {
+  title: string;
+  description?: string;
+  category: string;
+  estMinutes: number;
+  targetCount: number;
   sections?: CreateSurveySectionInput[];
   questions?: QuestionInput[];
 }
@@ -87,6 +98,18 @@ export const api = {
       teamId: input.teamId ?? null,
       proofRequired: input.proofRequired,
       selfBuilt: input.selfBuilt ?? false,
+      sections: input.sections ?? [],
+      questions: input.questions ?? [],
+    });
+  },
+
+  updateSurvey(id: number, input: UpdateSurveyInput) {
+    return http.put<Survey>(`/surveys/${id}`, {
+      title: input.title,
+      description: input.description ?? null,
+      category: input.category,
+      estMinutes: input.estMinutes,
+      targetCount: input.targetCount,
       sections: input.sections ?? [],
       questions: input.questions ?? [],
     });

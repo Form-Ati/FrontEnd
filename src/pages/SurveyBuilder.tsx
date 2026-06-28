@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   IconBack,
   IconClose,
@@ -23,10 +23,16 @@ import {
 import { QUESTION_TYPE_LABEL, type QuestionType, CATEGORIES } from '@/types/domain';
 import { api } from '@/api/api';
 import { ApiError } from '@/api/errors';
-import { useInvalidateAll, useTeams } from '@/api/queries';
+import {
+  useInvalidateAll,
+  useSurvey,
+  useSurveyQuestions,
+  useSurveySections,
+  useTeams,
+} from '@/api/queries';
 import { useToast } from '@/store/ui';
 import { confirmDialog } from '@/store/confirm';
-import type { Team } from '@/types/domain';
+import type { SurveyQuestion, SurveySection, Team } from '@/types/domain';
 import styles from './SurveyBuilder.module.css';
 
 const serialize = (
@@ -52,12 +58,85 @@ const TYPE_ORDER: QuestionType[] = [
   'date',
 ];
 
+function hydrateDraft(
+  serverSections: SurveySection[],
+  serverQuestions: SurveyQuestion[],
+): { sections: DraftSection[]; questions: DraftQuestion[] } {
+  const sectionUidById = new Map<number, string>();
+  const sections =
+    serverSections.length > 0
+      ? serverSections.map((section) => {
+          const uid = `section_${section.id}`;
+          sectionUidById.set(section.id, uid);
+          return {
+            uid,
+            title: section.title,
+            description: section.description ?? '',
+          };
+        })
+      : [newSection()];
+  const fallbackSectionUid = sections[0]?.uid ?? '';
+
+  const questions = serverQuestions.map((question) => {
+    const branchRules: Record<number, string> = {};
+    Object.entries(question.branchRules ?? {}).forEach(([option, targetSectionId]) => {
+      const optionIndex = question.options.findIndex((candidate) => candidate === option);
+      const targetUid = sectionUidById.get(Number(targetSectionId));
+      if (optionIndex >= 0 && targetUid) {
+        branchRules[optionIndex] = targetUid;
+      }
+    });
+
+    return {
+      uid: `question_${question.id}`,
+      sectionUid: question.sectionId
+        ? sectionUidById.get(question.sectionId) ?? fallbackSectionUid
+        : fallbackSectionUid,
+      type: question.type,
+      title: question.title,
+      description: question.description,
+      required: question.required,
+      options: [...question.options],
+      branchRules,
+      scaleMax: question.scaleMax,
+      scaleMinLabel: question.scaleMinLabel,
+      scaleMaxLabel: question.scaleMaxLabel,
+    };
+  });
+
+  if (questions.length > 0) {
+    return { sections, questions };
+  }
+  return { sections, questions: [newDraft('single', fallbackSectionUid)] };
+}
+
 // 자체 설문 빌더 — 구글폼 레퍼런스 UX.
 export function SurveyBuilder() {
+  const { id } = useParams();
+  const editId = Number(id ?? 0);
+  const editMode = editId > 0;
   const navigate = useNavigate();
   const invalidate = useInvalidateAll();
   const push = useToast((s) => s.push);
   const { data: teams } = useTeams();
+  const {
+    data: existingSurvey,
+    isLoading: surveyLoading,
+    isError: surveyError,
+    refetch: refetchSurvey,
+  } = useSurvey(editId);
+  const {
+    data: existingSections,
+    isLoading: sectionsLoading,
+    isError: sectionsError,
+    refetch: refetchSections,
+  } = useSurveySections(editId);
+  const {
+    data: existingQuestions,
+    isLoading: questionsLoading,
+    isError: questionsError,
+    refetch: refetchQuestions,
+  } = useSurveyQuestions(editId);
   const initialSection = useRef(newSection());
 
   const [title, setTitle] = useState('');
@@ -71,6 +150,7 @@ export function SurveyBuilder() {
   const [errorUids, setErrorUids] = useState<Set<string>>(new Set());
   const [dragUid, setDragUid] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
+  const loadedEditId = useRef<number | null>(null);
 
   // 작성 중 이탈 방지 — 초기 스냅샷과 비교해 변경 여부 판단
   const initialSnap = useRef(serialize('', '', [initialSection.current], [questions[0]]));
@@ -88,6 +168,29 @@ export function SurveyBuilder() {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [dirty]);
+
+  useEffect(() => {
+    if (!editMode || !existingSurvey || !existingSections || !existingQuestions) return;
+    if (loadedEditId.current === editId) return;
+
+    const draft = hydrateDraft(existingSections, existingQuestions);
+    setTitle(existingSurvey.title);
+    setDescription(existingSurvey.description ?? '');
+    setSections(draft.sections);
+    setQuestions(draft.questions);
+    setActiveUid(draft.questions[0]?.uid ?? '');
+    setPreview(false);
+    setErrorUids(new Set());
+    setPublishOpen(false);
+    initialSnap.current = serialize(
+      existingSurvey.title,
+      existingSurvey.description ?? '',
+      draft.sections,
+      draft.questions,
+    );
+    publishedRef.current = false;
+    loadedEditId.current = editId;
+  }, [editMode, editId, existingSurvey, existingSections, existingQuestions]);
 
   const tryExit = async () => {
     if (
@@ -124,19 +227,6 @@ export function SurveyBuilder() {
 
   const patchSection = (uid: string, p: Partial<DraftSection>) =>
     setSections((ss) => ss.map((s) => (s.uid === uid ? { ...s, ...p } : s)));
-
-  const addQuestion = () => {
-    const active = questions.find((x) => x.uid === activeUid);
-    const sectionUid = active?.sectionUid ?? sections[0]?.uid ?? '';
-    const q = newDraft('single', sectionUid);
-    setQuestions((qs) => {
-      const idx = qs.findIndex((x) => x.uid === activeUid);
-      const next = [...qs];
-      next.splice(idx >= 0 ? idx + 1 : qs.length, 0, q);
-      return next;
-    });
-    setActiveUid(q.uid);
-  };
 
   const addQuestionToSection = (sectionUid: string) => {
     const q = newDraft('single', sectionUid);
@@ -175,7 +265,13 @@ export function SurveyBuilder() {
     setSections(nextSections);
     setQuestions((qs) => {
       const next = qs.filter((q) => q.sectionUid !== sectionUid);
-      if (next.length) return next;
+      const cleaned = next.map((q) => ({
+        ...q,
+        branchRules: Object.fromEntries(
+          Object.entries(q.branchRules).filter(([, targetUid]) => targetUid !== sectionUid),
+        ),
+      }));
+      if (cleaned.length) return cleaned;
       return [newDraft('single', nextSections[0]?.uid ?? '')];
     });
     setActiveUid((uid) => {
@@ -188,7 +284,12 @@ export function SurveyBuilder() {
     setQuestions((qs) => {
       const idx = qs.findIndex((q) => q.uid === uid);
       if (idx < 0) return qs;
-      const copy = { ...qs[idx], uid: newDraft().uid, options: [...qs[idx].options] };
+      const copy = {
+        ...qs[idx],
+        uid: newDraft().uid,
+        options: [...qs[idx].options],
+        branchRules: { ...qs[idx].branchRules },
+      };
       const next = [...qs];
       next.splice(idx + 1, 0, copy);
       return next;
@@ -242,6 +343,88 @@ export function SurveyBuilder() {
     setPublishOpen(true);
   };
 
+  const isEditError = editMode && (surveyError || sectionsError || questionsError);
+  const isEditDataReady = !!existingSurvey && !!existingSections && !!existingQuestions;
+  const isEditLoading =
+    editMode &&
+    !isEditError &&
+    (surveyLoading || sectionsLoading || questionsLoading || !isEditDataReady || loadedEditId.current !== editId);
+  const isLocked = editMode && !!existingSurvey && existingSurvey.collectedCount > 0;
+  const headerTitle = editMode ? '설문 수정' : '설문 만들기';
+  const actionLabel = editMode ? '수정 저장' : '발행하기';
+
+  if (isEditLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.accent} />
+        <header className={styles.header}>
+          <button className={styles.icon} onClick={() => navigate(-1)} aria-label="뒤로">
+            <IconBack />
+          </button>
+          <span className={styles.headerTitle}>설문 수정</span>
+        </header>
+        <div className={styles.body}>
+          <div className={`${styles.cardBase} ${styles.stateCard}`}>설문을 불러오는 중이에요.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEditError) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.accent} />
+        <header className={styles.header}>
+          <button className={styles.icon} onClick={() => navigate(-1)} aria-label="뒤로">
+            <IconBack />
+          </button>
+          <span className={styles.headerTitle}>설문 수정</span>
+        </header>
+        <div className={styles.body}>
+          <div className={`${styles.cardBase} ${styles.stateCard}`}>
+            <strong>설문을 불러오지 못했어요.</strong>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                refetchSurvey();
+                refetchSections();
+                refetchQuestions();
+              }}
+            >
+              다시 시도
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLocked) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.accent} />
+        <header className={styles.header}>
+          <button className={styles.icon} onClick={() => navigate(-1)} aria-label="뒤로">
+            <IconBack />
+          </button>
+          <span className={styles.headerTitle}>설문 수정</span>
+        </header>
+        <div className={styles.body}>
+          <div className={`${styles.cardBase} ${styles.stateCard}`}>
+            <strong>이미 응답이 있어 편집할 수 없어요.</strong>
+            <p>질문이나 섹션을 바꾸면 저장된 답변과 결과가 어긋나서, 응답이 없는 설문만 수정할 수 있어요.</p>
+            <div className={styles.stateActions}>
+              <Button onClick={() => navigate(`/surveys/${editId}/results`)}>결과 보기</Button>
+              <Button variant="secondary" onClick={() => navigate(`/surveys/${editId}`)}>
+                상세로 돌아가기
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.accent} />
@@ -249,7 +432,7 @@ export function SurveyBuilder() {
         <button className={styles.icon} onClick={tryExit} aria-label="뒤로">
           <IconBack />
         </button>
-        <span className={styles.headerTitle}>설문 만들기</span>
+        <span className={styles.headerTitle}>{headerTitle}</span>
         <button
           className={styles.previewBtn}
           onClick={() => setPreview((p) => !p)}
@@ -332,6 +515,7 @@ export function SurveyBuilder() {
                       >
                         <QuestionEditor
                           q={q}
+                          sections={sections}
                           active={activeUid === q.uid}
                           invalid={errorUids.has(q.uid)}
                           onActivate={() => setActiveUid(q.uid)}
@@ -361,46 +545,56 @@ export function SurveyBuilder() {
             + 섹션 추가
           </button>
         )}
-        {!preview && (
-          <button className={styles.addBtn} onClick={addQuestion}>
-            + 질문 추가
-          </button>
-        )}
       </div>
 
       <div className={styles.footer}>
         <Button size="lg" full onClick={openPublish}>
-          발행하기
+          {actionLabel}
         </Button>
       </div>
 
       {publishOpen && (
         <PublishSheet
+          mode={editMode ? 'edit' : 'create'}
           questionCount={questions.length}
           teams={teams ?? []}
+          initialMeta={
+            editMode && existingSurvey
+              ? {
+                  category: existingSurvey.category ?? CATEGORIES[0],
+                  targetCount: existingSurvey.targetCount,
+                  estMinutes: existingSurvey.estMinutes,
+                }
+              : undefined
+          }
           onClose={() => setPublishOpen(false)}
           onPublish={async (meta) => {
             try {
-              const survey = await api.createSurvey({
+              const payload = {
                 title: title.trim(),
                 description: description.trim() || undefined,
-                externalUrl: null,
-                selfBuilt: true,
-                proofRequired: false,
                 category: meta.category,
                 estMinutes: meta.estMinutes,
                 targetCount: meta.targetCount,
-                teamId: meta.teamId,
                 sections: sections.map((section, i) => ({
                   clientId: section.uid,
                   title: section.title.trim() || `섹션 ${i + 1}`,
                   description: section.description.trim() || null,
                 })),
                 questions: questions.map(toQuestionInput),
-              });
+              };
+              const survey = editMode
+                ? await api.updateSurvey(editId, payload)
+                : await api.createSurvey({
+                    ...payload,
+                    externalUrl: null,
+                    selfBuilt: true,
+                    proofRequired: false,
+                    teamId: meta.teamId,
+                  });
               publishedRef.current = true; // 이탈 경고 해제
               invalidate();
-              push('설문을 발행했어요. 피드에 노출됩니다.', 'positive');
+              push(editMode ? '설문 수정을 저장했어요.' : '설문을 발행했어요. 피드에 노출됩니다.', 'positive');
               navigate(`/surveys/${survey.id}`, { replace: true });
             } catch (e) {
               if (e instanceof ApiError) push(e.message, 'warning');
@@ -470,6 +664,7 @@ function SectionPreview({
 // ─────────────────── 문항 에디터 카드 ───────────────────
 function QuestionEditor({
   q,
+  sections,
   active,
   invalid,
   removable,
@@ -483,6 +678,7 @@ function QuestionEditor({
   onDragEnd,
 }: {
   q: DraftQuestion;
+  sections: DraftSection[];
   active: boolean;
   invalid: boolean;
   removable: boolean;
@@ -495,14 +691,31 @@ function QuestionEditor({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
+  const currentSectionIndex = sections.findIndex((section) => section.uid === q.sectionUid);
+  const branchable = q.type === 'single' || q.type === 'dropdown';
+  const targetSections =
+    currentSectionIndex < 0 ? [] : sections.slice(currentSectionIndex + 1);
   const setOption = (i: number, val: string) => {
     const options = [...q.options];
     options[i] = val;
     onPatch({ options });
   };
   const addOption = () => onPatch({ options: [...q.options, `옵션 ${q.options.length + 1}`] });
-  const removeOption = (i: number) =>
-    onPatch({ options: q.options.filter((_, idx) => idx !== i) });
+  const removeOption = (i: number) => {
+    const branchRules = Object.fromEntries(
+      Object.entries(q.branchRules)
+        .map(([key, value]) => [Number(key), value] as const)
+        .filter(([key]) => key !== i)
+        .map(([key, value]) => [key > i ? key - 1 : key, value]),
+    );
+    onPatch({ options: q.options.filter((_, idx) => idx !== i), branchRules });
+  };
+  const setBranchTarget = (i: number, targetUid: string) => {
+    const branchRules = { ...q.branchRules };
+    if (targetUid) branchRules[i] = targetUid;
+    else delete branchRules[i];
+    onPatch({ branchRules });
+  };
 
   return (
     <div
@@ -550,24 +763,42 @@ function QuestionEditor({
 
         {needsOptions(q.type) &&
           q.options.map((opt, i) => (
-            <div key={i} className={styles.optRow}>
-              <span className={styles.optMark} data-type={q.type} aria-hidden>
-                {q.type === 'dropdown' ? `${i + 1}` : ''}
-              </span>
-              <input
-                className={styles.optInput}
-                value={opt}
-                placeholder={`옵션 ${i + 1}`}
-                onChange={(e) => setOption(i, e.target.value)}
-              />
-              {q.options.length > 1 && (
-                <button
-                  className={styles.optRemove}
-                  onClick={() => removeOption(i)}
-                  aria-label="옵션 삭제"
-                >
-                  <IconClose size={16} />
-                </button>
+            <div key={i} className={styles.optGroup}>
+              <div className={styles.optRow}>
+                <span className={styles.optMark} data-type={q.type} aria-hidden>
+                  {q.type === 'dropdown' ? `${i + 1}` : ''}
+                </span>
+                <input
+                  className={styles.optInput}
+                  value={opt}
+                  placeholder={`옵션 ${i + 1}`}
+                  onChange={(e) => setOption(i, e.target.value)}
+                />
+                {q.options.length > 1 && (
+                  <button
+                    className={styles.optRemove}
+                    onClick={() => removeOption(i)}
+                    aria-label="옵션 삭제"
+                  >
+                    <IconClose size={16} />
+                  </button>
+                )}
+              </div>
+              {branchable && targetSections.length > 0 && (
+                <label className={styles.branchRow}>
+                  <span>이 답변이면</span>
+                  <select
+                    value={q.branchRules[i] ?? ''}
+                    onChange={(e) => setBranchTarget(i, e.target.value)}
+                  >
+                    <option value="">다음 섹션</option>
+                    {targetSections.map((section, index) => (
+                      <option key={section.uid} value={section.uid}>
+                        섹션 {currentSectionIndex + index + 2}: {section.title || '제목 없음'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
             </div>
           ))}
@@ -667,43 +898,52 @@ function TrashIcon() {
 
 // ─────────────────── 발행 설정 시트 ───────────────────
 function PublishSheet({
+  mode = 'create',
   questionCount,
   teams,
+  initialMeta,
   onClose,
   onPublish,
 }: {
+  mode?: 'create' | 'edit';
   questionCount: number;
   teams: Team[];
+  initialMeta?: { category: string; targetCount: number; estMinutes: number };
   onClose: () => void;
   onPublish: (meta: { category: string; targetCount: number; estMinutes: number; teamId: number | null }) => void;
 }) {
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
-  const [targetCount, setTargetCount] = useState(50);
-  const [estMinutes, setEstMinutes] = useState(estimateMinutes(questionCount));
+  const [category, setCategory] = useState<string>(initialMeta?.category ?? CATEGORIES[0]);
+  const [targetCount, setTargetCount] = useState(initialMeta?.targetCount ?? 50);
+  const [estMinutes, setEstMinutes] = useState(initialMeta?.estMinutes ?? estimateMinutes(questionCount));
   const [ownerScope, setOwnerScope] = useState('personal');
   const [busy, setBusy] = useState(false);
-  const selectedTeam = teams.find((team) => String(team.id) === ownerScope);
+  const selectedTeam = mode === 'create' ? teams.find((team) => String(team.id) === ownerScope) : undefined;
+  const title = mode === 'edit' ? '수정 설정' : '발행 설정';
 
   return (
-    <Sheet label="발행 설정" onClose={onClose}>
-      <h2 className="h2">발행 설정</h2>
+    <Sheet label={title} onClose={onClose}>
+      <h2 className="h2">{title}</h2>
       <p className="sm muted">피드 노출과 크레딧 산정에 쓰여요.</p>
 
-      <label className={styles.sheetField}>
-        <span>발행 주체</span>
-        <select value={ownerScope} onChange={(e) => setOwnerScope(e.target.value)}>
-          <option value="personal">개인 크레딧</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name} · {team.responseCredit}개
-            </option>
-          ))}
-        </select>
-      </label>
-      {selectedTeam && (
-        <p className={styles.sheetNote}>
-          응답 보상은 {selectedTeam.name} 팀 크레딧에서 차감돼요.
-        </p>
+      {mode === 'create' && (
+        <>
+          <label className={styles.sheetField}>
+            <span>발행 주체</span>
+            <select value={ownerScope} onChange={(e) => setOwnerScope(e.target.value)}>
+              <option value="personal">개인 크레딧</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name} · {team.responseCredit}개
+                </option>
+              ))}
+            </select>
+          </label>
+          {selectedTeam && (
+            <p className={styles.sheetNote}>
+              응답 보상은 {selectedTeam.name} 팀 크레딧에서 차감돼요.
+            </p>
+          )}
+        </>
       )}
 
       <label className={styles.sheetField}>
@@ -755,7 +995,7 @@ function PublishSheet({
             setBusy(false);
           }}
         >
-          발행하기
+          {mode === 'edit' ? '저장하기' : '발행하기'}
         </Button>
       </div>
     </Sheet>
