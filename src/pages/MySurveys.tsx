@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/AppShell';
 import { EmptyState, ProgressBar, StatusBadge } from '@/components/Bits';
 import { ErrorState, SkeletonList } from '@/components/Skeleton';
-import { IconPlus } from '@/components/icons';
+import { IconSparkle } from '@/components/icons';
 import { useMySurveys } from '@/api/queries';
 import type { Survey } from '@/types/domain';
 import styles from './MySurveys.module.css';
@@ -61,8 +61,8 @@ export function MySurveys() {
         </ul>
       )}
 
-      <button className={styles.fab} onClick={() => navigate('/surveys/new')}>
-        <IconPlus size={18} /> 설문 등록
+      <button className={styles.fab} onClick={() => navigate('/ai')}>
+        <IconSparkle size={18} /> AI 설문 등록
       </button>
     </AppShell>
   );
