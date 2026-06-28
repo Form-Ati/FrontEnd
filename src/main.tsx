@@ -14,6 +14,17 @@ import './styles/global.css';
 
 const RETRYABLE = ['NETWORK', 'TIMEOUT'];
 
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister());
+  });
+  if ('caches' in window) {
+    caches.keys().then((keys) => {
+      keys.forEach((key) => caches.delete(key));
+    });
+  }
+}
+
 const queryClient = new QueryClient({
   // 쿼리 에러를 한 곳에서 토스트로 표출(401 은 http 계층이 로그아웃 처리).
   queryCache: new QueryCache({

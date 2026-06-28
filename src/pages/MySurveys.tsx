@@ -51,7 +51,12 @@ export function MySurveys() {
       ) : (
         <ul className={styles.list}>
           {list.map((s) => (
-            <SurveyRow key={s.id} survey={s} onOpen={() => navigate(`/surveys/${s.id}`)} />
+            <SurveyRow
+              key={s.id}
+              survey={s}
+              onOpen={() => navigate(`/surveys/${s.id}`)}
+              onResults={() => navigate(`/surveys/${s.id}/results`)}
+            />
           ))}
         </ul>
       )}
@@ -63,7 +68,15 @@ export function MySurveys() {
   );
 }
 
-function SurveyRow({ survey, onOpen }: { survey: Survey; onOpen: () => void }) {
+function SurveyRow({
+  survey,
+  onOpen,
+  onResults,
+}: {
+  survey: Survey;
+  onOpen: () => void;
+  onResults: () => void;
+}) {
   const remain = Math.max(0, survey.targetCount - survey.collectedCount);
   const pct = Math.round((survey.collectedCount / survey.targetCount) * 100);
   const usedCredit = survey.collectedCount * survey.costPerResponse;
@@ -103,8 +116,8 @@ function SurveyRow({ survey, onOpen }: { survey: Survey; onOpen: () => void }) {
         </div>
       )}
 
-      <button className={styles.respondentsBtn} onClick={onOpen}>
-        응답자 현황 보기
+      <button className={styles.respondentsBtn} onClick={onResults}>
+        결과 보기
       </button>
     </li>
   );

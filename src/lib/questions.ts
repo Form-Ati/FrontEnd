@@ -1,8 +1,15 @@
 // 자체 설문 빌더 — 문항 드래프트 헬퍼.
 import type { QuestionType, SurveyQuestion } from '@/types/domain';
 
+export interface DraftSection {
+  uid: string;
+  title: string;
+  description: string;
+}
+
 export interface DraftQuestion {
   uid: string;
+  sectionUid: string;
   type: QuestionType;
   title: string;
   description: string | null;
@@ -15,13 +22,23 @@ export interface DraftQuestion {
 
 let uidSeq = 0;
 export const newUid = () => `q_${Date.now()}_${++uidSeq}`;
+export const newSectionUid = () => `s_${Date.now()}_${++uidSeq}`;
 
 export const CHOICE_TYPES: QuestionType[] = ['single', 'multi', 'dropdown'];
 export const needsOptions = (t: QuestionType) => CHOICE_TYPES.includes(t);
 
-export function newDraft(type: QuestionType = 'single'): DraftQuestion {
+export function newSection(title = '섹션 1'): DraftSection {
+  return {
+    uid: newSectionUid(),
+    title,
+    description: '',
+  };
+}
+
+export function newDraft(type: QuestionType = 'single', sectionUid = ''): DraftQuestion {
   return {
     uid: newUid(),
+    sectionUid,
     type,
     title: '',
     description: null,
@@ -63,8 +80,9 @@ export function validateQuestions(qs: DraftQuestion[]): QuestionError[] {
 // 드래프트 → API 입력(문항)
 export function toQuestionInput(
   q: DraftQuestion,
-): Omit<SurveyQuestion, 'id' | 'surveyId' | 'position'> {
+): Omit<SurveyQuestion, 'id' | 'surveyId' | 'sectionId' | 'position'> & { sectionClientId: string | null } {
   return {
+    sectionClientId: q.sectionUid || null,
     type: q.type,
     title: q.title.trim(),
     description: q.description?.trim() || null,

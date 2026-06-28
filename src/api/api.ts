@@ -10,6 +10,8 @@ import type {
   ReportReason,
   Survey,
   SurveyQuestion,
+  SurveyResult,
+  SurveySection,
   SurveyResponse,
   Team,
   TeamCreditLedgerEntry,
@@ -26,7 +28,20 @@ export interface TokenResponse {
   refreshToken: string;
 }
 
-type QuestionInput = Omit<SurveyQuestion, 'id' | 'surveyId' | 'position'>;
+type QuestionInput = Omit<SurveyQuestion, 'id' | 'surveyId' | 'sectionId' | 'position'> & {
+  sectionClientId?: string | null;
+};
+
+export interface ResponseAnswerInput {
+  questionId: number;
+  value: string | string[];
+}
+
+export interface CreateSurveySectionInput {
+  clientId: string;
+  title: string;
+  description?: string | null;
+}
 
 export interface CreateSurveyInput {
   title: string;
@@ -38,6 +53,7 @@ export interface CreateSurveyInput {
   teamId?: number | null;
   proofRequired: boolean;
   selfBuilt?: boolean;
+  sections?: CreateSurveySectionInput[];
   questions?: QuestionInput[];
 }
 
@@ -71,8 +87,13 @@ export const api = {
       teamId: input.teamId ?? null,
       proofRequired: input.proofRequired,
       selfBuilt: input.selfBuilt ?? false,
+      sections: input.sections ?? [],
       questions: input.questions ?? [],
     });
+  },
+
+  getSurveySections(surveyId: number) {
+    return http.get<SurveySection[]>(`/surveys/${surveyId}/sections`);
   },
 
   getSurveyQuestions(surveyId: number) {
@@ -81,6 +102,10 @@ export const api = {
 
   getSurvey(id: number) {
     return http.get<Survey>(`/surveys/${id}`);
+  },
+
+  getSurveyResults(id: number) {
+    return http.get<SurveyResult>(`/surveys/${id}/results`);
   },
 
   mySurveys() {
@@ -100,10 +125,11 @@ export const api = {
     return http.post<SurveyResponse>('/responses/start', { surveyId });
   },
 
-  completeResponse(input: { surveyId: number; proofInput?: string }) {
+  completeResponse(input: { surveyId: number; proofInput?: string; answers?: ResponseAnswerInput[] }) {
     return http.post<{ response: SurveyResponse; reward: number }>('/responses/complete', {
       surveyId: input.surveyId,
       proofInput: input.proofInput ?? null,
+      answers: input.answers ?? [],
     });
   },
 

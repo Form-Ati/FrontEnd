@@ -116,6 +116,9 @@ export function SurveyDetail() {
             <span className="sm muted">잔여 {remain}명</span>
           </div>
           <ProgressBar value={survey.collectedCount} max={survey.targetCount} />
+          <Button full onClick={() => navigate(`/surveys/${survey.id}/results`)}>
+            결과 보기
+          </Button>
           <Button variant="secondary" full onClick={() => navigate('/my-surveys')}>
             내 설문에서 관리하기
           </Button>

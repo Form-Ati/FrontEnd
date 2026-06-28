@@ -118,10 +118,90 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+.sectionList,
+.sectionBlock,
 .previewList {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+.sectionBlock {
+  gap: var(--space-3);
+}
+
+.sectionEditor {
+  position: relative;
+  border-top: 6px solid var(--action-primary);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sectionBadge {
+  width: fit-content;
+  border-radius: var(--radius-full);
+  background: var(--surface-teal);
+  color: var(--teal-700);
+  padding: 4px 10px;
+  font-size: var(--text-caption);
+  font-weight: 800;
+}
+.sectionTitleInput {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-strong);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  outline: none;
+  padding: var(--space-2) 0;
+}
+.sectionDescInput {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-default);
+  font-size: var(--text-sm);
+  outline: none;
+  padding: var(--space-2) 0;
+}
+.sectionTitleInput:focus,
+.sectionDescInput:focus {
+  border-bottom-color: var(--action-primary);
+}
+.sectionRemove {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+}
+.sectionRemove:hover {
+  background: var(--bg-sunken);
+  color: var(--status-danger);
+}
+
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.previewSectionHead {
+  border-top: 6px solid var(--action-primary);
+  padding: var(--space-5);
+}
+.previewSectionTitle {
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--text-strong);
 }
 
 /* 문항 에디터 */
@@ -391,6 +471,19 @@
   transition: background var(--t-base);
 }
 .addBtn:hover {
+  background: var(--surface-teal);
+}
+.addQuestionBtn {
+  width: 100%;
+  min-height: 44px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  color: var(--action-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.addQuestionBtn:hover {
   background: var(--surface-teal);
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   IconBack,
@@ -13,10 +13,12 @@ import {
   coerceForType,
   estimateMinutes,
   newDraft,
+  newSection,
   needsOptions,
   toQuestionInput,
   validateQuestions,
   type DraftQuestion,
+  type DraftSection,
 } from '@/lib/questions';
 import { QUESTION_TYPE_LABEL, type QuestionType, CATEGORIES } from '@/types/domain';
 import { api } from '@/api/api';
@@ -27,10 +29,16 @@ import { confirmDialog } from '@/store/confirm';
 import type { Team } from '@/types/domain';
 import styles from './SurveyBuilder.module.css';
 
-const serialize = (title: string, description: string, qs: DraftQuestion[]) =>
+const serialize = (
+  title: string,
+  description: string,
+  sections: DraftSection[],
+  qs: DraftQuestion[],
+) =>
   JSON.stringify({
     title,
     description,
+    sections: sections.map(({ uid: _uid, ...rest }) => rest),
     q: qs.map(({ uid: _uid, ...rest }) => rest),
   });
 
@@ -50,10 +58,14 @@ export function SurveyBuilder() {
   const invalidate = useInvalidateAll();
   const push = useToast((s) => s.push);
   const { data: teams } = useTeams();
+  const initialSection = useRef(newSection());
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [questions, setQuestions] = useState<DraftQuestion[]>([newDraft('single')]);
+  const [sections, setSections] = useState<DraftSection[]>([initialSection.current]);
+  const [questions, setQuestions] = useState<DraftQuestion[]>([
+    newDraft('single', initialSection.current.uid),
+  ]);
   const [activeUid, setActiveUid] = useState<string>(questions[0]?.uid ?? '');
   const [preview, setPreview] = useState(false);
   const [errorUids, setErrorUids] = useState<Set<string>>(new Set());
@@ -61,10 +73,10 @@ export function SurveyBuilder() {
   const [publishOpen, setPublishOpen] = useState(false);
 
   // 작성 중 이탈 방지 — 초기 스냅샷과 비교해 변경 여부 판단
-  const initialSnap = useRef(serialize('', '', [questions[0]]));
+  const initialSnap = useRef(serialize('', '', [initialSection.current], [questions[0]]));
   const publishedRef = useRef(false);
   const dirty =
-    !publishedRef.current && serialize(title, description, questions) !== initialSnap.current;
+    !publishedRef.current && serialize(title, description, sections, questions) !== initialSnap.current;
 
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -110,8 +122,13 @@ export function SurveyBuilder() {
   const patch = (uid: string, p: Partial<DraftQuestion>) =>
     setQuestions((qs) => qs.map((q) => (q.uid === uid ? { ...q, ...p } : q)));
 
+  const patchSection = (uid: string, p: Partial<DraftSection>) =>
+    setSections((ss) => ss.map((s) => (s.uid === uid ? { ...s, ...p } : s)));
+
   const addQuestion = () => {
-    const q = newDraft('single');
+    const active = questions.find((x) => x.uid === activeUid);
+    const sectionUid = active?.sectionUid ?? sections[0]?.uid ?? '';
+    const q = newDraft('single', sectionUid);
     setQuestions((qs) => {
       const idx = qs.findIndex((x) => x.uid === activeUid);
       const next = [...qs];
@@ -119,6 +136,52 @@ export function SurveyBuilder() {
       return next;
     });
     setActiveUid(q.uid);
+  };
+
+  const addQuestionToSection = (sectionUid: string) => {
+    const q = newDraft('single', sectionUid);
+    setQuestions((qs) => {
+      const lastInSection = qs.map((x, i) => ({ x, i })).filter(({ x }) => x.sectionUid === sectionUid).at(-1);
+      const next = [...qs];
+      next.splice(lastInSection ? lastInSection.i + 1 : qs.length, 0, q);
+      return next;
+    });
+    setActiveUid(q.uid);
+  };
+
+  const addSection = () => {
+    const section = newSection(`섹션 ${sections.length + 1}`);
+    const q = newDraft('single', section.uid);
+    setSections((ss) => [...ss, section]);
+    setQuestions((qs) => [...qs, q]);
+    setActiveUid(q.uid);
+  };
+
+  const requestRemoveSection = async (sectionUid: string) => {
+    if (sections.length <= 1) return;
+    const section = sections.find((s) => s.uid === sectionUid);
+    const count = questions.filter((q) => q.sectionUid === sectionUid).length;
+    if (
+      !(await confirmDialog({
+        title: '이 섹션을 삭제할까요?',
+        body: `${section?.title || '섹션'}에 있는 질문 ${count}개도 함께 삭제돼요.`,
+        confirmLabel: '삭제',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    const nextSections = sections.filter((s) => s.uid !== sectionUid);
+    setSections(nextSections);
+    setQuestions((qs) => {
+      const next = qs.filter((q) => q.sectionUid !== sectionUid);
+      if (next.length) return next;
+      return [newDraft('single', nextSections[0]?.uid ?? '')];
+    });
+    setActiveUid((uid) => {
+      const next = questions.find((q) => q.sectionUid !== sectionUid && q.uid !== uid);
+      return next?.uid ?? '';
+    });
   };
 
   const duplicate = (uid: string) =>
@@ -137,10 +200,16 @@ export function SurveyBuilder() {
   const move = (uid: string, dir: -1 | 1) =>
     setQuestions((qs) => {
       const idx = qs.findIndex((q) => q.uid === uid);
-      const to = idx + dir;
-      if (idx < 0 || to < 0 || to >= qs.length) return qs;
+      if (idx < 0) return qs;
+      const sectionUid = qs[idx].sectionUid;
+      const sameSection = qs
+        .map((q, i) => ({ q, i }))
+        .filter(({ q }) => q.sectionUid === sectionUid);
+      const localIdx = sameSection.findIndex(({ q }) => q.uid === uid);
+      const target = sameSection[localIdx + dir];
+      if (!target) return qs;
       const next = [...qs];
-      [next[idx], next[to]] = [next[to], next[idx]];
+      [next[idx], next[target.i]] = [next[target.i], next[idx]];
       return next;
     });
 
@@ -150,6 +219,7 @@ export function SurveyBuilder() {
       const from = qs.findIndex((q) => q.uid === dragUid);
       const to = qs.findIndex((q) => q.uid === targetUid);
       if (from < 0 || to < 0) return qs;
+      if (qs[from].sectionUid !== qs[to].sectionUid) return qs;
       const next = [...qs];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
@@ -218,49 +288,79 @@ export function SurveyBuilder() {
         {/* 문항 */}
         {preview ? (
           <div className={styles.previewList}>
-            {questions.map((q, i) => (
-              <QuestionView
-                key={q.uid}
-                question={q}
-                index={i}
-                value={q.type === 'multi' ? [] : ''}
-                onChange={() => {}}
-                disabled
-              />
+            {sections.map((section) => (
+              <SectionPreview key={section.uid} section={section}>
+                {questions
+                  .filter((q) => q.sectionUid === section.uid)
+                  .map((q) => (
+                    <QuestionView
+                      key={q.uid}
+                      question={q}
+                      index={questions.findIndex((x) => x.uid === q.uid)}
+                      value={q.type === 'multi' ? [] : ''}
+                      onChange={() => {}}
+                      disabled
+                    />
+                  ))}
+              </SectionPreview>
             ))}
           </div>
         ) : (
-          <ul className={styles.list}>
-            {questions.map((q) => (
-              <li
-                key={q.uid}
-                onDragOver={(e) => {
-                  if (dragUid) e.preventDefault();
-                }}
-                onDrop={() => {
-                  reorderTo(q.uid);
-                  setDragUid(null);
-                }}
-              >
-                <QuestionEditor
-                  q={q}
-                  active={activeUid === q.uid}
-                  invalid={errorUids.has(q.uid)}
-                  onActivate={() => setActiveUid(q.uid)}
-                  onPatch={(p) => patch(q.uid, p)}
-                  onDuplicate={() => duplicate(q.uid)}
-                  onRemove={() => requestRemove(q.uid)}
-                  onMoveUp={() => move(q.uid, -1)}
-                  onMoveDown={() => move(q.uid, 1)}
-                  onDragStart={() => setDragUid(q.uid)}
-                  onDragEnd={() => setDragUid(null)}
-                  removable={questions.length > 1}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className={styles.sectionList}>
+            {sections.map((section, sectionIndex) => {
+              const sectionQuestions = questions.filter((q) => q.sectionUid === section.uid);
+              return (
+                <section key={section.uid} className={styles.sectionBlock}>
+                  <SectionEditor
+                    section={section}
+                    index={sectionIndex}
+                    removable={sections.length > 1}
+                    onPatch={(p) => patchSection(section.uid, p)}
+                    onRemove={() => requestRemoveSection(section.uid)}
+                  />
+                  <ul className={styles.list}>
+                    {sectionQuestions.map((q) => (
+                      <li
+                        key={q.uid}
+                        onDragOver={(e) => {
+                          if (dragUid) e.preventDefault();
+                        }}
+                        onDrop={() => {
+                          reorderTo(q.uid);
+                          setDragUid(null);
+                        }}
+                      >
+                        <QuestionEditor
+                          q={q}
+                          active={activeUid === q.uid}
+                          invalid={errorUids.has(q.uid)}
+                          onActivate={() => setActiveUid(q.uid)}
+                          onPatch={(p) => patch(q.uid, p)}
+                          onDuplicate={() => duplicate(q.uid)}
+                          onRemove={() => requestRemove(q.uid)}
+                          onMoveUp={() => move(q.uid, -1)}
+                          onMoveDown={() => move(q.uid, 1)}
+                          onDragStart={() => setDragUid(q.uid)}
+                          onDragEnd={() => setDragUid(null)}
+                          removable={questions.length > 1}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  <button className={styles.addQuestionBtn} onClick={() => addQuestionToSection(section.uid)}>
+                    + 이 섹션에 질문 추가
+                  </button>
+                </section>
+              );
+            })}
+          </div>
         )}
 
+        {!preview && (
+          <button className={styles.addBtn} onClick={addSection}>
+            + 섹션 추가
+          </button>
+        )}
         {!preview && (
           <button className={styles.addBtn} onClick={addQuestion}>
             + 질문 추가
@@ -291,6 +391,11 @@ export function SurveyBuilder() {
                 estMinutes: meta.estMinutes,
                 targetCount: meta.targetCount,
                 teamId: meta.teamId,
+                sections: sections.map((section, i) => ({
+                  clientId: section.uid,
+                  title: section.title.trim() || `섹션 ${i + 1}`,
+                  description: section.description.trim() || null,
+                })),
                 questions: questions.map(toQuestionInput),
               });
               publishedRef.current = true; // 이탈 경고 해제
@@ -304,6 +409,61 @@ export function SurveyBuilder() {
         />
       )}
     </div>
+  );
+}
+
+function SectionEditor({
+  section,
+  index,
+  removable,
+  onPatch,
+  onRemove,
+}: {
+  section: DraftSection;
+  index: number;
+  removable: boolean;
+  onPatch: (p: Partial<DraftSection>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className={`${styles.cardBase} ${styles.sectionEditor}`}>
+      <div className={styles.sectionBadge}>섹션 {index + 1}</div>
+      <input
+        className={styles.sectionTitleInput}
+        placeholder={`섹션 ${index + 1}`}
+        value={section.title}
+        onChange={(e) => onPatch({ title: e.target.value })}
+      />
+      <input
+        className={styles.sectionDescInput}
+        placeholder="섹션 설명 (선택)"
+        value={section.description}
+        onChange={(e) => onPatch({ description: e.target.value })}
+      />
+      {removable && (
+        <button className={styles.sectionRemove} onClick={onRemove} aria-label="섹션 삭제">
+          <IconClose size={18} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SectionPreview({
+  section,
+  children,
+}: {
+  section: DraftSection;
+  children: ReactNode;
+}) {
+  return (
+    <section className={styles.previewSection}>
+      <div className={`${styles.cardBase} ${styles.previewSectionHead}`}>
+        <h2 className={styles.previewSectionTitle}>{section.title || '제목 없는 섹션'}</h2>
+        {section.description && <p className={styles.previewDesc}>{section.description}</p>}
+      </div>
+      {children}
+    </section>
   );
 }
 

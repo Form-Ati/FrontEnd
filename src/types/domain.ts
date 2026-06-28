@@ -109,6 +109,7 @@ export type QuestionType =
 export interface SurveyQuestion {
   id: number;
   surveyId: number;
+  sectionId: number | null;
   position: number;
   type: QuestionType;
   title: string;
@@ -118,6 +119,14 @@ export interface SurveyQuestion {
   scaleMax: number; // scale 용 (2~10)
   scaleMinLabel: string | null;
   scaleMaxLabel: string | null;
+}
+
+export interface SurveySection {
+  id: number;
+  surveyId: number;
+  position: number;
+  title: string;
+  description: string | null;
 }
 
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
@@ -142,6 +151,40 @@ export interface SurveyResponse {
   completedAt: string | null;
   creditedAt: string | null;
   createdAt: string;
+}
+
+export interface SurveyResultValueCount {
+  value: string;
+  count: number;
+  percentage: number;
+}
+
+export interface SurveyResultTextAnswer {
+  value: string;
+  completedAt: string | null;
+}
+
+export interface SurveyQuestionResult {
+  questionId: number;
+  sectionId: number | null;
+  position: number;
+  type: QuestionType;
+  title: string;
+  description: string | null;
+  required: boolean;
+  options: string[];
+  answerCount: number;
+  optionCounts: SurveyResultValueCount[];
+  average: number | null;
+  distribution: SurveyResultValueCount[];
+  textAnswers: SurveyResultTextAnswer[];
+}
+
+export interface SurveyResult {
+  survey: Survey;
+  responseCount: number;
+  sections: SurveySection[];
+  questions: SurveyQuestionResult[];
 }
 
 export type CreditReason =

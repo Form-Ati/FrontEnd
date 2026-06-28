@@ -30,6 +30,20 @@ export const useSurveyQuestions = (id: number) =>
     enabled: !!id,
   });
 
+export const useSurveySections = (id: number) =>
+  useQuery({
+    queryKey: ['survey', id, 'sections'] as const,
+    queryFn: () => api.getSurveySections(id),
+    enabled: !!id,
+  });
+
+export const useSurveyResults = (id: number) =>
+  useQuery({
+    queryKey: ['survey', id, 'results'] as const,
+    queryFn: () => api.getSurveyResults(id),
+    enabled: !!id,
+  });
+
 export const useMySurveys = () =>
   useQuery({ queryKey: qk.mySurveys, queryFn: () => api.mySurveys() });
 

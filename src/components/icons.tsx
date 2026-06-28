@@ -135,3 +135,9 @@ export const IconExternal = ({ size }: P) => (
     <path d="M14 4h6v6M20 4l-9 9M19 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h6" />
   </svg>
 );
+export const IconDownload = ({ size }: P) => (
+  <svg {...base(size)}>
+    <path d="M12 4v10M8 10l4 4 4-4" />
+    <path d="M5 18h14" />
+  </svg>
+);

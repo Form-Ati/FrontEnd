@@ -35,6 +35,31 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+.sectionList,
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sectionHead {
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-top: 6px solid var(--action-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+}
+.sectionTitle {
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+.sectionDesc {
+  margin-top: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
 .submit {
   margin-top: var(--space-5);
 }

@@ -9,6 +9,7 @@ import { Feed } from './pages/Feed';
 import { SurveyDetail } from './pages/SurveyDetail';
 import { ResponseDone } from './pages/ResponseDone';
 import { SurveyFill } from './pages/SurveyFill';
+import { SurveyResults } from './pages/SurveyResults';
 import { SurveyBuilder } from './pages/SurveyBuilder';
 import { MySurveys } from './pages/MySurveys';
 import { AiWizard } from './pages/AiWizard';
@@ -36,6 +37,7 @@ export default function App() {
       <Route path="/surveys/:id" element={<Protected><SurveyDetail /></Protected>} />
       <Route path="/surveys/:id/fill" element={<Protected><SurveyFill /></Protected>} />
       <Route path="/surveys/:id/done" element={<Protected><ResponseDone /></Protected>} />
+      <Route path="/surveys/:id/results" element={<Protected><SurveyResults /></Protected>} />
       <Route path="/my-surveys" element={<Protected><MySurveys /></Protected>} />
       <Route path="/ai" element={<Protected><AiWizard /></Protected>} />
       <Route path="/me" element={<Protected><MyPage /></Protected>} />
