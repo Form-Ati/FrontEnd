@@ -15,6 +15,7 @@ const RESPONSE_REASON: Record<CreditReason, string> = {
   EARN_RESPONSE: '설문 응답 적립',
   SPEND_COLLECT: '내 설문 응답 수집',
   SEED: '가입 시드 크레딧',
+  TRANSFER_TO_TEAM: '팀 크레딧 입금',
   PENALTY: '패널티 차감',
 };
 const AI_REASON: Record<AiCreditReason, string> = {

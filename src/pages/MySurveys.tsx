@@ -78,6 +78,7 @@ function SurveyRow({ survey, onOpen }: { survey: Survey; onOpen: () => void }) {
 
       <div className={styles.metaLine}>
         <span className="sm muted">
+          {survey.team ? `${survey.team.name} · ` : ''}
           목표 <b className="num">{survey.targetCount}</b>명 · 응답{' '}
           <b className="num">{survey.collectedCount}</b>명
         </span>

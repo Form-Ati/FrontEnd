@@ -21,9 +21,10 @@ import {
 import { QUESTION_TYPE_LABEL, type QuestionType, CATEGORIES } from '@/types/domain';
 import { api } from '@/api/api';
 import { ApiError } from '@/api/errors';
-import { useInvalidateAll } from '@/api/queries';
+import { useInvalidateAll, useTeams } from '@/api/queries';
 import { useToast } from '@/store/ui';
 import { confirmDialog } from '@/store/confirm';
+import type { Team } from '@/types/domain';
 import styles from './SurveyBuilder.module.css';
 
 const serialize = (title: string, description: string, qs: DraftQuestion[]) =>
@@ -48,6 +49,7 @@ export function SurveyBuilder() {
   const navigate = useNavigate();
   const invalidate = useInvalidateAll();
   const push = useToast((s) => s.push);
+  const { data: teams } = useTeams();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -275,6 +277,7 @@ export function SurveyBuilder() {
       {publishOpen && (
         <PublishSheet
           questionCount={questions.length}
+          teams={teams ?? []}
           onClose={() => setPublishOpen(false)}
           onPublish={async (meta) => {
             try {
@@ -287,6 +290,7 @@ export function SurveyBuilder() {
                 category: meta.category,
                 estMinutes: meta.estMinutes,
                 targetCount: meta.targetCount,
+                teamId: meta.teamId,
                 questions: questions.map(toQuestionInput),
               });
               publishedRef.current = true; // 이탈 경고 해제
@@ -504,22 +508,43 @@ function TrashIcon() {
 // ─────────────────── 발행 설정 시트 ───────────────────
 function PublishSheet({
   questionCount,
+  teams,
   onClose,
   onPublish,
 }: {
   questionCount: number;
+  teams: Team[];
   onClose: () => void;
-  onPublish: (meta: { category: string; targetCount: number; estMinutes: number }) => void;
+  onPublish: (meta: { category: string; targetCount: number; estMinutes: number; teamId: number | null }) => void;
 }) {
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [targetCount, setTargetCount] = useState(50);
   const [estMinutes, setEstMinutes] = useState(estimateMinutes(questionCount));
+  const [ownerScope, setOwnerScope] = useState('personal');
   const [busy, setBusy] = useState(false);
+  const selectedTeam = teams.find((team) => String(team.id) === ownerScope);
 
   return (
     <Sheet label="발행 설정" onClose={onClose}>
       <h2 className="h2">발행 설정</h2>
       <p className="sm muted">피드 노출과 크레딧 산정에 쓰여요.</p>
+
+      <label className={styles.sheetField}>
+        <span>발행 주체</span>
+        <select value={ownerScope} onChange={(e) => setOwnerScope(e.target.value)}>
+          <option value="personal">개인 크레딧</option>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name} · {team.responseCredit}개
+            </option>
+          ))}
+        </select>
+      </label>
+      {selectedTeam && (
+        <p className={styles.sheetNote}>
+          응답 보상은 {selectedTeam.name} 팀 크레딧에서 차감돼요.
+        </p>
+      )}
 
       <label className={styles.sheetField}>
         <span>카테고리</span>
@@ -561,7 +586,12 @@ function PublishSheet({
           loading={busy}
           onClick={async () => {
             setBusy(true);
-            await onPublish({ category, targetCount, estMinutes });
+            await onPublish({
+              category,
+              targetCount,
+              estMinutes,
+              teamId: selectedTeam ? selectedTeam.id : null,
+            });
             setBusy(false);
           }}
         >

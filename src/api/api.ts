@@ -11,6 +11,11 @@ import type {
   Survey,
   SurveyQuestion,
   SurveyResponse,
+  Team,
+  TeamCreditLedgerEntry,
+  TeamDetail,
+  TeamInvite,
+  TeamRole,
   User,
 } from '@/types/domain';
 import { http } from './http';
@@ -30,6 +35,7 @@ export interface CreateSurveyInput {
   category: string;
   estMinutes: number;
   targetCount: number;
+  teamId?: number | null;
   proofRequired: boolean;
   selfBuilt?: boolean;
   questions?: QuestionInput[];
@@ -62,6 +68,7 @@ export const api = {
       category: input.category,
       estMinutes: input.estMinutes,
       targetCount: input.targetCount,
+      teamId: input.teamId ?? null,
       proofRequired: input.proofRequired,
       selfBuilt: input.selfBuilt ?? false,
       questions: input.questions ?? [],
@@ -133,5 +140,56 @@ export const api = {
 
   purchaseAiCredit(amount: number) {
     return http.post<{ balance: number }>('/ai/credits/purchase', { amount });
+  },
+
+  // ───────────────────────── Team ─────────────────────────
+  teams() {
+    return http.get<Team[]>('/teams');
+  },
+
+  createTeam(input: { name: string; courseName?: string; semester?: string }) {
+    return http.post<TeamDetail>('/teams', {
+      name: input.name,
+      courseName: input.courseName ?? null,
+      semester: input.semester ?? null,
+    });
+  },
+
+  team(id: number) {
+    return http.get<TeamDetail>(`/teams/${id}`);
+  },
+
+  joinTeam(code: string) {
+    return http.post<TeamDetail>('/teams/join', { code });
+  },
+
+  teamInvites(teamId: number) {
+    return http.get<TeamInvite[]>(`/teams/${teamId}/invites`);
+  },
+
+  createTeamInvite(teamId: number, input: { maxUses?: number; expiresInDays?: number } = {}) {
+    return http.post<TeamInvite>(`/teams/${teamId}/invites`, {
+      maxUses: input.maxUses ?? null,
+      expiresInDays: input.expiresInDays ?? null,
+    });
+  },
+
+  revokeTeamInvite(teamId: number, inviteId: number) {
+    return http.patch<TeamInvite>(`/teams/${teamId}/invites/${inviteId}/revoke`, {});
+  },
+
+  updateTeamMemberRole(teamId: number, userId: number, role: Exclude<TeamRole, 'OWNER'>) {
+    return http.patch<TeamDetail>(`/teams/${teamId}/members/${userId}/role`, { role });
+  },
+
+  teamCredit(teamId: number) {
+    return http.get<{ balance: number; ledger: TeamCreditLedgerEntry[] }>(`/teams/${teamId}/credits`);
+  },
+
+  depositTeamCredit(teamId: number, amount: number) {
+    return http.post<{ balance: number; ledger: TeamCreditLedgerEntry[] }>(
+      `/teams/${teamId}/credits/deposit`,
+      { amount },
+    );
   },
 };

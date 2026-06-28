@@ -1,11 +1,11 @@
 .page {
   min-height: var(--app-h, 100dvh);
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   background: var(--bg-base);
-  padding: calc(var(--space-5) + env(safe-area-inset-top)) var(--space-4)
+  padding: calc(var(--space-5) + env(safe-area-inset-top)) var(--space-3)
     calc(var(--space-6) + env(safe-area-inset-bottom));
 }
 .brand {

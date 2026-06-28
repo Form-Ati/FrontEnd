@@ -12,7 +12,7 @@ export function Welcome() {
   const seedCredit = me?.responseCredit ?? 5;
   return (
     <div className={styles.page}>
-      <button className={styles.back} onClick={() => navigate('/home')} aria-label="뒤로">
+      <button className={styles.back} onClick={() => navigate('/feed')} aria-label="뒤로">
         <IconBack />
       </button>
 
@@ -34,7 +34,7 @@ export function Welcome() {
       </div>
 
       <div className={styles.actions}>
-        <Button size="lg" full onClick={() => navigate('/home')}>
+        <Button size="lg" full onClick={() => navigate('/feed')}>
           폼앗이 둘러보기
         </Button>
       </div>

@@ -29,6 +29,8 @@ export interface Survey {
   id: number;
   ownerId: number;
   owner?: OwnerSummary;
+  teamId: number | null;
+  team?: TeamSummary | null;
   title: string;
   description: string | null;
   externalUrl: string | null; // 구글폼 등 (자체빌더면 null)
@@ -40,6 +42,56 @@ export interface Survey {
   proofRequired: boolean; // 증빙 토큰 사용 여부
   selfBuilt: boolean; // 자체 빌더로 만든 설문(externalUrl 없이 앱 안에서 응답)
   status: SurveyStatus;
+  createdAt: string;
+}
+
+export type TeamRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+export type TeamStatus = 'ACTIVE' | 'ARCHIVED';
+
+export interface TeamSummary {
+  id: number;
+  name: string;
+  courseName: string | null;
+  semester: string | null;
+}
+
+export interface Team {
+  id: number;
+  name: string;
+  courseName: string | null;
+  semester: string | null;
+  university: string | null;
+  responseCredit: number;
+  status: TeamStatus;
+  role: TeamRole;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface TeamMember {
+  userId: number;
+  email: string;
+  nickname: string;
+  university: string | null;
+  role: TeamRole;
+  joinedAt: string;
+}
+
+export interface TeamDetail {
+  team: Team;
+  members: TeamMember[];
+}
+
+export interface TeamInvite {
+  id: number;
+  teamId: number;
+  code: string;
+  createdById: number;
+  createdByNickname: string;
+  maxUses: number;
+  usedCount: number;
+  expiresAt: string;
+  revokedAt: string | null;
   createdAt: string;
 }
 
@@ -96,6 +148,7 @@ export type CreditReason =
   | 'EARN_RESPONSE'
   | 'SPEND_COLLECT'
   | 'SEED'
+  | 'TRANSFER_TO_TEAM'
   | 'PENALTY';
 
 export interface CreditLedgerEntry {
@@ -134,6 +187,19 @@ export interface AiSession {
   tokensIn: number | null;
   tokensOut: number | null;
   costUsd: number | null;
+  createdAt: string;
+}
+
+export type TeamCreditReason = 'DEPOSIT_FROM_USER' | 'SPEND_COLLECT' | 'ADJUSTMENT' | 'REFUND';
+
+export interface TeamCreditLedgerEntry {
+  id: number;
+  teamId: number;
+  actorId: number | null;
+  actorNickname: string | null;
+  delta: number;
+  reason: TeamCreditReason;
+  refResponseId: number | null;
   createdAt: string;
 }
 

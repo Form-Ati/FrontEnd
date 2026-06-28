@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/AppShell';
-import { IconBell, IconGear, IconChevronRight, IconCredit, IconReport } from '@/components/icons';
+import { IconBell, IconGear, IconChevronRight, IconCredit, IconReport, IconTeam, IconSparkle } from '@/components/icons';
 import { IconLock } from '@/components/Illust';
 import { useMe, useReciprocity } from '@/api/queries';
 import { useAuth } from '@/store/auth';
@@ -59,6 +59,8 @@ export function MyPage() {
 
       <ul className={styles.menu}>
         <MenuItem icon={<IconCredit size={20} />} label="크레딧 내역" onClick={() => navigate('/credits')} />
+        <MenuItem icon={<IconTeam size={20} />} label="팀 관리" onClick={() => navigate('/teams')} />
+        <MenuItem icon={<IconSparkle size={20} />} label="AI 설문 설계" onClick={() => navigate('/ai')} />
         <MenuItem icon={<IconReport size={20} />} label="신고 내역" onClick={() => push('접수된 신고가 없어요.')} />
         <MenuItem icon={<IconHelp />} label="도움말" onClick={() => push('도움말은 준비 중이에요.')} />
         <li className={styles.item}>

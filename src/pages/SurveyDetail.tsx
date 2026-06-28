@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { Card, ProgressBar, StatusBadge } from '@/components/Bits';
 import { ErrorState, Skeleton } from '@/components/Skeleton';
 import { IconShare, IconCheck } from '@/components/icons';
-import { useMe, useSurvey } from '@/api/queries';
+import { useMe, useSurvey, useTeams } from '@/api/queries';
 import { api } from '@/api/api';
 import { ApiError } from '@/api/errors';
 import { useToast } from '@/store/ui';
@@ -18,6 +18,7 @@ export function SurveyDetail() {
   const navigate = useNavigate();
   const { data: survey, isLoading, isError, refetch } = useSurvey(surveyId);
   const { data: me } = useMe();
+  const { data: teams } = useTeams();
   const owner = survey?.owner;
   const push = useToast((s) => s.push);
   const [starting, setStarting] = useState(false);
@@ -44,7 +45,8 @@ export function SurveyDetail() {
     );
   }
 
-  const isOwner = me?.id === survey.ownerId;
+  const isTeamMember = !!survey.teamId && !!teams?.some((team) => team.id === survey.teamId);
+  const isOwner = me?.id === survey.ownerId || isTeamMember;
   const remain = Math.max(0, survey.targetCount - survey.collectedCount);
 
   const start = async () => {
@@ -87,7 +89,7 @@ export function SurveyDetail() {
           {owner?.nickname?.[0]}
         </span>
         <span className="sm muted">
-          {owner?.university} {owner?.nickname}
+          {survey.team ? `${survey.team.name} 팀` : `${owner?.university} ${owner?.nickname}`}
         </span>
         {isOwner && <StatusBadge status={survey.status} />}
       </div>

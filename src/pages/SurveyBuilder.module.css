@@ -460,6 +460,14 @@
   display: flex;
   gap: var(--space-3);
 }
+.sheetNote {
+  border-radius: var(--radius-md);
+  background: var(--surface-teal);
+  color: var(--teal-700);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
 .sheetActions {
   display: flex;
   gap: var(--space-3);

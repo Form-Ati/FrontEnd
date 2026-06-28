@@ -1,10 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { IconHome, IconFeed, IconMySurveys, IconUser, IconPlus } from './icons';
+import { IconFeed, IconMySurveys, IconUser, IconPlus, IconTeam } from './icons';
 import styles from './BottomNav.module.css';
 
 const left = [
-  { to: '/home', label: '홈', Icon: IconHome },
   { to: '/feed', label: '설문 피드', Icon: IconFeed },
+  { to: '/teams', label: '팀 관리', Icon: IconTeam },
 ];
 const right = [
   { to: '/my-surveys', label: '내 설문', Icon: IconMySurveys },
@@ -33,7 +33,7 @@ export function BottomNav() {
   );
 }
 
-function Tab({ to, label, Icon }: { to: string; label: string; Icon: typeof IconHome }) {
+function Tab({ to, label, Icon }: { to: string; label: string; Icon: typeof IconFeed }) {
   return (
     <NavLink
       to={to}

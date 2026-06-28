@@ -4,14 +4,15 @@ import { Card } from '@/components/Bits';
 import { ReciprocityGauge } from '@/components/ReciprocityGauge';
 import { IllustRobot } from '@/components/Illust';
 import { Skeleton } from '@/components/Skeleton';
-import { IconPlus, IconChevronRight } from '@/components/icons';
-import { useMe, useReciprocity } from '@/api/queries';
+import { IconPlus, IconChevronRight, IconTeam } from '@/components/icons';
+import { useMe, useReciprocity, useTeams } from '@/api/queries';
 import styles from './Home.module.css';
 
 // 홈 (mockup 4).
 export function Home() {
   const navigate = useNavigate();
   const { data: me, isLoading } = useMe();
+  const { data: teams, isLoading: teamsLoading } = useTeams();
   const { given, received } = useReciprocity();
 
   return (
@@ -41,6 +42,23 @@ export function Home() {
         <span className={styles.plus} aria-hidden>
           <IconPlus size={20} />
         </span>
+      </button>
+
+      <button className={styles.teamCard} onClick={() => navigate('/teams')}>
+        <span className={styles.teamIcon} aria-hidden>
+          <IconTeam size={22} />
+        </span>
+        <span className={styles.teamText}>
+          <span className="h3">팀 프로젝트</span>
+          <span className="sm muted">
+            {teamsLoading
+              ? '팀 정보를 불러오는 중'
+              : teams?.length
+                ? `${teams.length}개 팀 관리`
+                : '팀 만들기 또는 초대코드로 가입'}
+          </span>
+        </span>
+        <IconChevronRight size={18} />
       </button>
 
       <button className={styles.aiCard} onClick={() => navigate('/ai')}>

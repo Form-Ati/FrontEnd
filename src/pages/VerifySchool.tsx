@@ -107,7 +107,7 @@ export function VerifySchool() {
         {phase === 'code' && (
           <input
             className={styles.codeInput}
-            placeholder="인증 코드 6자리"
+            placeholder="인증 코드 (000000)"
             inputMode="numeric"
             maxLength={6}
             value={code}

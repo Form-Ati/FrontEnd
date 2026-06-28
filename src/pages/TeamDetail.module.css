@@ -1,0 +1,254 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.teamIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  color: var(--teal-700);
+  background: var(--surface-teal);
+}
+
+.heroBody {
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role,
+.memberRole {
+  border-radius: var(--radius-full);
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+  padding: 5px 10px;
+  font-size: var(--text-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.stat {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-base);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  font-size: var(--text-h2);
+  font-weight: 700;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.sectionHead,
+.inviteRow,
+.ledgerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sectionHead {
+  flex-wrap: wrap;
+}
+
+.inviteRow {
+  align-items: flex-start;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+}
+
+.inviteCode {
+  font-size: var(--text-h2);
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: 0;
+  word-break: break-all;
+}
+
+.inviteActions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.iconBtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  color: var(--text-default);
+  display: grid;
+  place-items: center;
+}
+
+.inviteHistory {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inviteMini {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-default);
+}
+
+.depositForm {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.amountField {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-default);
+}
+
+.amountField input,
+.roleSelect {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  color: var(--text-default);
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.members,
+.ledger {
+  display: flex;
+  flex-direction: column;
+}
+
+.member,
+.ledgerRow {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.member:last-child,
+.ledgerRow:last-child {
+  border-bottom: none;
+}
+
+.member {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  background: var(--bg-sunken);
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.memberBody {
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 700;
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .hero {
+    grid-template-columns: 48px 1fr;
+  }
+
+  .role {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .depositForm {
+    grid-template-columns: 1fr;
+  }
+
+  .inviteRow {
+    flex-direction: column;
+  }
+
+  .inviteActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .member {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .roleSelect,
+  .memberRole {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

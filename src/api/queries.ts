@@ -9,6 +9,10 @@ export const qk = {
   mySurveys: ['surveys', 'mine'] as const,
   responseCredit: ['credit', 'response'] as const,
   aiCredit: ['credit', 'ai'] as const,
+  teams: ['teams'] as const,
+  team: (id: number) => ['teams', id] as const,
+  teamInvites: (id: number) => ['teams', id, 'invites'] as const,
+  teamCredit: (id: number) => ['teams', id, 'credit'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: qk.me, queryFn: () => api.me() });
@@ -35,6 +39,22 @@ export const useResponseCredit = () =>
 export const useAiCredit = () =>
   useQuery({ queryKey: qk.aiCredit, queryFn: () => api.aiCredit() });
 
+export const useTeams = () =>
+  useQuery({ queryKey: qk.teams, queryFn: () => api.teams() });
+
+export const useTeam = (id: number) =>
+  useQuery({ queryKey: qk.team(id), queryFn: () => api.team(id), enabled: !!id });
+
+export const useTeamInvites = (id: number, enabled = true) =>
+  useQuery({
+    queryKey: qk.teamInvites(id),
+    queryFn: () => api.teamInvites(id),
+    enabled: !!id && enabled,
+  });
+
+export const useTeamCredit = (id: number) =>
+  useQuery({ queryKey: qk.teamCredit(id), queryFn: () => api.teamCredit(id), enabled: !!id });
+
 // 상호성: 갚은 응답(=기여도) vs 받은 응답(내 설문이 모은 응답 수 합).
 // 인메모리 db 대신 서버 데이터(useMe + useMySurveys)로 산출한다.
 export function useReciprocity() {
@@ -57,7 +77,8 @@ export function useInvalidateAll() {
           k === 'feed' ||
           k === 'survey' ||
           k === 'surveys' ||
-          k === 'credit'
+          k === 'credit' ||
+          k === 'teams'
         );
       },
     });

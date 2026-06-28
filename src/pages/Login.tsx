@@ -33,7 +33,7 @@ export function Login() {
     try {
       await login(v);
       push('다시 오셨네요. 환영해요.', 'positive');
-      navigate('/home');
+      navigate('/feed');
     } catch (e) {
       if (e instanceof ApiError) setError('password', { message: e.message });
     }

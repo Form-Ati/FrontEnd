@@ -34,6 +34,14 @@ export const IconUser = ({ size }: P) => (
     <path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" />
   </svg>
 );
+export const IconTeam = ({ size }: P) => (
+  <svg {...base(size)}>
+    <circle cx="9" cy="8" r="3" />
+    <circle cx="17" cy="9" r="2.5" />
+    <path d="M3.5 20c.4-3.3 2.7-5.5 5.5-5.5s5.1 2.2 5.5 5.5" />
+    <path d="M14.5 15.5c2.4.3 4.2 1.9 4.7 4.5" />
+  </svg>
+);
 export const IconBell = ({ size }: P) => (
   <svg {...base(size)}>
     <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" />

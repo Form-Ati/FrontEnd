@@ -71,7 +71,7 @@ export function AiWizard() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <button className={styles.icon} onClick={() => navigate('/home')} aria-label="닫기">
+        <button className={styles.icon} onClick={() => navigate('/feed')} aria-label="닫기">
           <IconClose />
         </button>
         <span className={styles.headerTitle}>AI 설문 설계</span>
